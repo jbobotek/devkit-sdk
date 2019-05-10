@@ -9,6 +9,10 @@
 #include "SystemVersion.h"
 #include "UARTClass.h"
 #include "console_cli.h"
+#include "Telemetry/Telemetry.h"
+#include "src\libraries\AzureIoT\src\AzureIotHub.h"
+#include "DevKitMQTTClient.h"
+#include "utility.h"
 
 struct console_command 
 {
@@ -30,6 +34,7 @@ struct console_command
 #define PROMPT          "\r\n# "
 
 #define INBUF_SIZE      1024
+#define MESSAGE_MAX_LEN 256
 
 ////////////////////////////////////////////////////////////////////////////////////
 // System functions
@@ -46,6 +51,7 @@ static void wifi_pwd_Command(int argc, char **argv);
 static void az_iothub_command(int argc, char **argv);
 static void dps_uds_command(int argc, char **argv);
 static void enable_secure_command(int argc, char **argv);
+static void output_telemetry_command(int argc, char **argv);
 
 static const struct console_command cmds[] = {
   {"help",          "Help document",                                            false, help_command},
@@ -57,6 +63,7 @@ static const struct console_command cmds[] = {
   {"set_az_iothub", "Set the connection string of Microsoft Azure IoT Hub",     false, az_iothub_command},
   {"set_dps_uds",   "Set DPS Unique Device Secret (DPS)",                       true,  dps_uds_command},
   {"enable_secure", "Enable secure channel between AZ3166 and secure chip",     false, enable_secure_command},
+  {"send_telemetry", "Send telemetry to IoT Hub, and output to serial",         false, output_telemetry_command},
 };
 
 static const int cmd_count = sizeof(cmds) / sizeof(struct console_command);
@@ -307,6 +314,22 @@ static void enable_secure_command(int argc, char **argv)
     }
     return;
 }
+
+static void output_telemetry_command(int argc, char **argv)
+{
+    // if (hasWifi)
+    // {
+    // Send teperature data
+    char messagePayload[MESSAGE_MAX_LEN];
+
+    bool temperatureAlert = readMessage(8, messagePayload);
+    EVENT_INSTANCE* message = DevKitMQTTClient_Event_Generate(messagePayload, MESSAGE);
+    DevKitMQTTClient_Event_AddProp(message, "temperatureAlert", temperatureAlert ? "true" : "false");
+    DevKitMQTTClient_SendEventInstance(message);
+
+    // }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 // Console app
 static bool is_privacy_cmd(char *inbuf, unsigned int bp)
