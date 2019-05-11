@@ -62,7 +62,7 @@ static bool IsConfigurationMode()
 {
     pinMode(USER_BUTTON_A, INPUT);
     int buttonState = digitalRead(USER_BUTTON_A);
-    if (buttonState == LOW)
+    if (buttonState == HIGH)
     {
         return true;
     }

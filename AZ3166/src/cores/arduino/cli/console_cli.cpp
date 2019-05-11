@@ -10,7 +10,7 @@
 #include "UARTClass.h"
 #include "console_cli.h"
 #include "Telemetry/Telemetry.h"
-#include "src\libraries\AzureIoT\src\AzureIotHub.h"
+#include "AzureIotHub.h"
 #include "DevKitMQTTClient.h"
 #include "utility.h"
 
