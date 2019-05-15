@@ -62,7 +62,7 @@ static bool IsConfigurationMode()
 {
     pinMode(USER_BUTTON_A, INPUT);
     int buttonState = digitalRead(USER_BUTTON_A);
-    if (buttonState == HIGH)
+    if (buttonState == LOW)
     {
         return true;
     }
@@ -88,6 +88,7 @@ static void EnterConfigurationMode()
 
     if (!InitSystemWiFi())
     {
+        Serial.println("Set wifi Config Mode failed\r\n");
         return;
     }
 
