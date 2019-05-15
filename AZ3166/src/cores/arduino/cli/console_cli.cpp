@@ -13,6 +13,7 @@
 #include "AzureIotHub.h"
 #include "DevKitMQTTClient.h"
 #include "utility.h"
+#include "SystemTickCounter.h"
 
 struct console_command 
 {
@@ -39,6 +40,8 @@ struct console_command
 ////////////////////////////////////////////////////////////////////////////////////
 // System functions
 extern UARTClass Serial;
+
+uint16_t telemCount = 0;
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Commands table
@@ -139,6 +142,7 @@ static int write_eeprom(char* string, int idxZone)
     
     // Write data to EEPROM
     int result = eeprom.write((uint8_t*)string, len, idxZone);
+
     if (result != 0)
     {
         Serial.printf("ERROR: Failed to write EEPROM: 0x%02x.\r\n", idxZone);
@@ -187,7 +191,8 @@ static void wifi_pwd_Command(int argc, char **argv)
         pwd = "";
     }
     else
-    {
+    {   Serial.printf("hobbs rules.\r\n");
+ 
         if (argv[1] == NULL) 
         {
             Serial.printf("Usage: set_wifipwd [password]. Please provide the password of the Wi-Fi.\r\n");
@@ -317,17 +322,17 @@ static void enable_secure_command(int argc, char **argv)
 
 static void output_telemetry_command(int argc, char **argv)
 {
-    // if (hasWifi)
-    // {
+    SystemTickCounterRead();
+
     // Send teperature data
     char messagePayload[MESSAGE_MAX_LEN];
-
-    bool temperatureAlert = readMessage(8, messagePayload);
+    
+    bool temperatureAlert = readMessage((int)telemCount++, messagePayload);
     EVENT_INSTANCE* message = DevKitMQTTClient_Event_Generate(messagePayload, MESSAGE);
     DevKitMQTTClient_Event_AddProp(message, "temperatureAlert", temperatureAlert ? "true" : "false");
     DevKitMQTTClient_SendEventInstance(message);
+    Serial.printf("%s\r\n", messagePayload);
 
-    // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -544,7 +549,7 @@ void cli_main(void)
     print_help();
     Serial.print(PROMPT);
     
-    while (true) 
+    while (true)
     {
         if (!get_input(inbuf, &bp))
         {
