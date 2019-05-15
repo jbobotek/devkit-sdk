@@ -88,6 +88,7 @@ static void EnterConfigurationMode()
 
     if (!InitSystemWiFi())
     {
+        Serial.println("Set wifi Config Mode failed\r\n");
         return;
     }
 

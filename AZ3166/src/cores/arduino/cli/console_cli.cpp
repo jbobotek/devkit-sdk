@@ -9,6 +9,11 @@
 #include "SystemVersion.h"
 #include "UARTClass.h"
 #include "console_cli.h"
+#include "Telemetry/Telemetry.h"
+#include "AzureIotHub.h"
+#include "DevKitMQTTClient.h"
+#include "utility.h"
+#include "SystemTickCounter.h"
 
 struct console_command 
 {
@@ -30,10 +35,13 @@ struct console_command
 #define PROMPT          "\r\n# "
 
 #define INBUF_SIZE      1024
+#define MESSAGE_MAX_LEN 256
 
 ////////////////////////////////////////////////////////////////////////////////////
 // System functions
 extern UARTClass Serial;
+
+uint16_t telemCount = 0;
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Commands table
@@ -46,6 +54,7 @@ static void wifi_pwd_Command(int argc, char **argv);
 static void az_iothub_command(int argc, char **argv);
 static void dps_uds_command(int argc, char **argv);
 static void enable_secure_command(int argc, char **argv);
+static void output_telemetry_command(int argc, char **argv);
 
 static const struct console_command cmds[] = {
   {"help",          "Help document",                                            false, help_command},
@@ -57,6 +66,7 @@ static const struct console_command cmds[] = {
   {"set_az_iothub", "Set the connection string of Microsoft Azure IoT Hub",     false, az_iothub_command},
   {"set_dps_uds",   "Set DPS Unique Device Secret (DPS)",                       true,  dps_uds_command},
   {"enable_secure", "Enable secure channel between AZ3166 and secure chip",     false, enable_secure_command},
+  {"send_telemetry", "Send telemetry to IoT Hub, and output to serial",         false, output_telemetry_command},
 };
 
 static const int cmd_count = sizeof(cmds) / sizeof(struct console_command);
@@ -132,6 +142,7 @@ static int write_eeprom(char* string, int idxZone)
     
     // Write data to EEPROM
     int result = eeprom.write((uint8_t*)string, len, idxZone);
+
     if (result != 0)
     {
         Serial.printf("ERROR: Failed to write EEPROM: 0x%02x.\r\n", idxZone);
@@ -180,7 +191,8 @@ static void wifi_pwd_Command(int argc, char **argv)
         pwd = "";
     }
     else
-    {
+    {   Serial.printf("hobbs rules.\r\n");
+ 
         if (argv[1] == NULL) 
         {
             Serial.printf("Usage: set_wifipwd [password]. Please provide the password of the Wi-Fi.\r\n");
@@ -307,6 +319,22 @@ static void enable_secure_command(int argc, char **argv)
     }
     return;
 }
+
+static void output_telemetry_command(int argc, char **argv)
+{
+    SystemTickCounterRead();
+
+    // Send teperature data
+    char messagePayload[MESSAGE_MAX_LEN];
+    
+    bool temperatureAlert = readMessage((int)telemCount++, messagePayload);
+    EVENT_INSTANCE* message = DevKitMQTTClient_Event_Generate(messagePayload, MESSAGE);
+    DevKitMQTTClient_Event_AddProp(message, "temperatureAlert", temperatureAlert ? "true" : "false");
+    DevKitMQTTClient_SendEventInstance(message);
+    Serial.printf("%s\r\n", messagePayload);
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 // Console app
 static bool is_privacy_cmd(char *inbuf, unsigned int bp)
@@ -521,7 +549,7 @@ void cli_main(void)
     print_help();
     Serial.print(PROMPT);
     
-    while (true) 
+    while (true)
     {
         if (!get_input(inbuf, &bp))
         {
