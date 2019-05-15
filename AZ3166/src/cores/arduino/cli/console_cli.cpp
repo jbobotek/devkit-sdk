@@ -191,8 +191,7 @@ static void wifi_pwd_Command(int argc, char **argv)
         pwd = "";
     }
     else
-    {   Serial.printf("hobbs rules.\r\n");
- 
+    {   
         if (argv[1] == NULL) 
         {
             Serial.printf("Usage: set_wifipwd [password]. Please provide the password of the Wi-Fi.\r\n");
