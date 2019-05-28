@@ -41,7 +41,7 @@ struct console_command
 // System functions
 extern UARTClass Serial;
 
-uint16_t telemCount = 0;
+//uint16_t telemCount = 0;
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Commands table
