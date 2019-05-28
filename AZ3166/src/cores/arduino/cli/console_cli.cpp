@@ -54,7 +54,7 @@ static const struct console_command cmds[] = {
   {"scan",          "Scan Wi-Fi AP",                                            false, wifi_scan},
   {"set_wifissid",  "Set Wi-Fi SSID",                                           false, wifi_ssid_command},
   {"set_wifipwd",   "Set Wi-Fi password",                                       true,  wifi_pwd_Command},
-  {"set_az_iothub", "Set the connection string of Microsoft Azure IoT Hub",     false, az_iothub_command},
+  {"set_az_iothub", "Set the connection string of Microsoft Azure IoT Hub",     true, az_iothub_command},
   {"set_dps_uds",   "Set DPS Unique Device Secret (DPS)",                       true,  dps_uds_command},
   {"enable_secure", "Enable secure channel between AZ3166 and secure chip",     false, enable_secure_command},
 };
